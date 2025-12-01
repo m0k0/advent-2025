@@ -32,7 +32,8 @@ func Solve(variant string, input string) (string, error) {
 	const DIAL_MIN = 0
 	const DIAL_MAX = 100
 	var zeroCount int64 = 0
-	var rotation int64 = 50
+	var clickCount int64 = 0
+	var currentRotation int64 = 50
 	var lineNumber int64 = 0
 	for scanner.Scan() {
 		lineNumber++
@@ -47,29 +48,53 @@ func Solve(variant string, input string) (string, error) {
 			return "", fmt.Errorf("invalid rotation number on line %d: '%s'", lineNumber, line)
 		}
 
+		var rotationVector int64 = 0
 		switch line[0] {
 		case 'L':
-			rotationMovement *= -1
+			rotationVector = -1
 		case 'R':
-			rotationMovement *= 1
+			rotationVector = 1
 		default:
 			return "", fmt.Errorf("invalid instruction on line %d: '%s'", lineNumber, line)
 		}
 
-		rotation += rotationMovement
-		if rotation < DIAL_MIN {
-			rotation = DIAL_MAX + (rotation % DIAL_MAX)
-		}
-		if rotation >= DIAL_MAX {
-			rotation = DIAL_MIN + (rotation % DIAL_MAX)
+		for rotationMovement != 0 {
+			currentCycleMovement := (rotationMovement % DIAL_MAX)
+			if currentCycleMovement == 0 {
+				currentCycleMovement = DIAL_MAX
+			}
+			rotationMovement -= currentCycleMovement
+			newRotation := currentRotation + currentCycleMovement*rotationVector
+
+			// don't click if already on zero, unless doing a full turn
+			if (currentRotation != 0 || currentCycleMovement == DIAL_MAX) &&
+				(newRotation <= DIAL_MIN || newRotation >= DIAL_MAX) {
+				clickCount++
+			}
+
+			if newRotation <= DIAL_MIN {
+				newRotation = DIAL_MAX + (newRotation % DIAL_MAX)
+			} else if newRotation >= DIAL_MAX {
+				newRotation = DIAL_MIN + (newRotation % DIAL_MAX)
+			}
+
+			if newRotation == DIAL_MAX {
+				newRotation = 0
+				zeroCount++
+			}
+
+			currentRotation = newRotation
 		}
 
-		if rotation == 0 {
-			zeroCount++
-		}
 	}
 
-	solution := fmt.Sprintf("the password is: %d", zeroCount)
+	solution := ""
+	switch variant {
+	case "part1":
+		solution = fmt.Sprintf("the password is: %d", zeroCount)
+	case "part2":
+		solution = fmt.Sprintf("the password is: %d", clickCount)
+	}
 
 	return solution, nil
 }
