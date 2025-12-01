@@ -22,7 +22,8 @@ func main() {
 
 	config, err := readConfig("config.yaml")
 	if err != nil {
-		panic(fmt.Errorf("failed to read config: %w", err))
+		fmt.Print(fmt.Errorf("failed to read config: \n%w", err))
+		os.Exit(1)
 	}
 
 	fmt.Printf("Working on a solution for day %d/%s, using '%s' input...\n\n",
@@ -32,7 +33,8 @@ func main() {
 
 	solution, err := solve(config)
 	if err != nil {
-		panic(fmt.Errorf("failed to solve: %w", err))
+		fmt.Print(fmt.Errorf("failed to solve: \n%w", err))
+		os.Exit(1)
 	}
 
 	fmt.Print(solution)
@@ -42,13 +44,13 @@ func readConfig(path string) (*AdventConfig, error) {
 
 	configFile, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("i/o error: %w", err)
+		return nil, fmt.Errorf("i/o error: \n%w", err)
 	}
 
 	config := &AdventConfig{}
 	err = yaml.Unmarshal(configFile, config)
 	if err != nil {
-		return nil, fmt.Errorf("yaml parse error: %w", err)
+		return nil, fmt.Errorf("yaml parse error: \n%w", err)
 	}
 
 	return config, nil
