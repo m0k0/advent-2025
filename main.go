@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"m0k0/advent-2025/common"
 	"m0k0/advent-2025/day01"
+	"m0k0/advent-2025/day02"
 	"os"
 )
 
@@ -39,6 +40,8 @@ func solve(advent *common.AdventSetup) (string, error) {
 	switch advent.Day {
 	case 1:
 		return day01.Solve(advent)
+	case 2:
+		return day02.Solve(advent)
 	default:
 		return "", errors.New("no solution availble for this day")
 	}
