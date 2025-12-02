@@ -20,7 +20,8 @@ func Solve(advent *common.AdventSetup) (string, error) {
 	scanner.Split(splitRange)
 
 	const RANGE_SEPARATOR string = "-"
-	rangeIndex := 0
+	var rangeIndex int64 = 0
+	var invalidIds int64 = 0
 	for scanner.Scan() {
 		rangeIndex++
 		rangeText := scanner.Text()
@@ -44,10 +45,58 @@ func Solve(advent *common.AdventSetup) (string, error) {
 				rangeIndex, rangeText)
 		}
 
-		fmt.Printf("min: %d; max: %d\n", rangeMin, rangeMax)
+		invalidIds += sumInvalidIds(rangeMin, rangeMax, advent.VerboseOutput)
 	}
 
-	return "", nil
+	solution := fmt.Sprintf("sum of invalid ids: %d", invalidIds)
+	return solution, nil
+}
+
+func sumInvalidIds(rangeMin int64, rangeMax int64, verboseOutput bool) int64 {
+
+	var invalidIdSum int64 = 0
+	if verboseOutput {
+		fmt.Printf("min: %d; max: %d\n", rangeMin, rangeMax)
+	}
+	for id := rangeMin; id <= rangeMax; id++ {
+
+		if isValidId(id) {
+			continue
+		}
+		if verboseOutput {
+			fmt.Printf("\tinvalid id: %d\n", id)
+		}
+		invalidIdSum += id
+	}
+
+	return invalidIdSum
+}
+
+func isValidId(id int64) bool {
+
+	idString := fmt.Sprint(id)
+
+	// uneven amount of digits, can't be invalid
+	if len(idString)%2 == 1 {
+		return true
+	}
+
+	firstPart := idString[:len(idString)/2]
+	secondPart := idString[len(idString)/2:]
+
+	// not repeating twice, can't be invalid
+	if firstPart != secondPart {
+		return true
+	}
+
+	trimmedIdPart := strings.TrimLeft(firstPart, "0")
+	// has leading zeroes, can't be invalid
+	if len(trimmedIdPart) != len(firstPart) {
+		return true
+	}
+
+	// assume invalid
+	return false
 }
 
 func splitRange(data []byte, atEOF bool) (advance int, token []byte, err error) {

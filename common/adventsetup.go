@@ -9,9 +9,10 @@ import (
 )
 
 type AdventSetup struct {
-	Day     int32  `yaml:"day"`
-	Variant string `yaml:"variant"`
-	Input   string `yaml:"input"`
+	Day           int32  `yaml:"day"`
+	Variant       string `yaml:"variant"`
+	Input         string `yaml:"input"`
+	VerboseOutput bool   `yaml:"verboseOutput"`
 }
 
 func (advent *AdventSetup) ReadFromYamlFile(path string) error {
