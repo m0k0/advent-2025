@@ -3,25 +3,13 @@ package day01
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"m0k0/advent-2025/common"
 	"strconv"
 )
 
-func openInput(inputName string) (*os.File, error) {
+func Solve(advent *common.AdventSetup) (string, error) {
 
-	path := fmt.Sprintf(`day01/%s.input.txt`, inputName)
-
-	inputFile, err := os.OpenFile(path, os.O_RDONLY, 0)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read input '%s': \n%w", inputName, err)
-	}
-
-	return inputFile, nil
-}
-
-func Solve(variant string, input string) (string, error) {
-
-	inputFile, err := openInput(input)
+	inputFile, err := advent.OpenInput()
 	if err != nil {
 		return "", fmt.Errorf("day 1 error: \n%w", err)
 	}
@@ -89,7 +77,7 @@ func Solve(variant string, input string) (string, error) {
 	}
 
 	solution := ""
-	switch variant {
+	switch advent.Variant {
 	case "part1":
 		solution = fmt.Sprintf("the password is: %d", zeroCount)
 	case "part2":
