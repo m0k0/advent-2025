@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -30,7 +31,16 @@ func (advent *AdventSetup) ReadFromYamlFile(path string) error {
 
 func (advent *AdventSetup) OpenInput() (*os.File, error) {
 
-	path := fmt.Sprintf(`day01/%s.input.txt`, advent.Input)
+	if advent.Day < 1 || advent.Day > 25 {
+		return nil, errors.New("invalid day value")
+	}
+	dataDir := "day"
+	if advent.Day < 10 {
+		dataDir += "0"
+	}
+	dataDir += fmt.Sprintf("%d", advent.Day)
+
+	path := fmt.Sprintf(`%s/%s.input.txt`, dataDir, advent.Input)
 
 	inputFile, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
