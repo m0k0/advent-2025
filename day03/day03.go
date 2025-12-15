@@ -28,16 +28,18 @@ func Solve(advent *common.AdventSetup) (string, error) {
 
 	var tasks sync.WaitGroup
 
+	logger := common.Logger{
+		Verbose: advent.VerboseOutput,
+	}
+
 	for scanner.Scan() {
 		bankNumber++
 		bankText := scanner.Text()
 
-		//fmt.Print(bankText)
-
 		tasks.Add(1)
 		go func() {
-			//maxJoltage, err := getMaxJoltage(bankText, numberOfBatteries, 0, advent.VerboseOutput)
-			maxJoltage, err := getMaxJoltageReverse(bankText, numberOfBatteries, advent.VerboseOutput)
+
+			maxJoltage, err := getMaxJoltageReverse(bankText, numberOfBatteries, logger)
 			if err != nil {
 				fmt.Print(fmt.Errorf("error on bank %d, '%s': %w", bankNumber, bankText, err))
 			}
@@ -54,11 +56,9 @@ func Solve(advent *common.AdventSetup) (string, error) {
 	return solution, nil
 }
 
-func getMaxJoltageReverse(batteryBank string, batteryCount int64, verboseOutput bool) (int64, error) {
+func getMaxJoltageReverse(batteryBank string, batteryCount int64, logger common.Logger) (int64, error) {
 
-	if verboseOutput {
-		fmt.Printf("bank: %s\n", batteryBank)
-	}
+	logger.PrintVerboseF("bank: %s\n", batteryBank)
 
 	var startingIndex = len(batteryBank) - int(batteryCount)
 	var largestBattery int64 = 0
@@ -78,121 +78,18 @@ func getMaxJoltageReverse(batteryBank string, batteryCount int64, verboseOutput 
 
 	joltage := largestBattery * int64(math.Pow(10, float64(batteryCount-1)))
 
-	if verboseOutput {
-		tabs := ""
-		for i := 0; i < int(batteryCount); i++ {
-			tabs += " "
-		}
-		fmt.Printf("%sjoltage: %d\n", tabs, joltage)
-	}
+	logger.PrintVerboseFD("joltage: %d\n", int(batteryCount), joltage)
 
 	if batteryCount > 1 {
-		subJoltage, err := getMaxJoltageReverse(batteryBank[largestBatteryIndex+1:], batteryCount-1, verboseOutput)
+		subJoltage, err := getMaxJoltageReverse(batteryBank[largestBatteryIndex+1:], batteryCount-1, logger)
 		if err != nil {
 			return 0, err
 		}
 		joltage += subJoltage
 	}
 
-	if verboseOutput {
-		tabs := ""
-		for i := 0; i < int(batteryCount); i++ {
-			tabs += " "
-		}
-		fmt.Printf("%smax joltage: %d\n", tabs, joltage)
-	}
+	logger.PrintVerboseFD("max joltage: %d\n", int(batteryCount), joltage)
 
 	return joltage, nil
 
-}
-func getMaxJoltage(batteryBank string, batteryCount int64, startingJoltage int64, verboseOutput bool) (int64, error) {
-
-	var maxJoltage int64 = 0
-	var joltage int64 = 0
-	var reservedBatteries [2]int64
-
-	if verboseOutput {
-		fmt.Printf("bank: %s\n", batteryBank)
-	}
-
-	for i1 := 0; i1 < len(batteryBank); i1++ {
-
-		isEndOfBank := i1 >= len(batteryBank)-int(batteryCount)-1
-		if startingJoltage == 0 {
-			isEndOfBank = i1 > len(batteryBank)-int(batteryCount)
-			if isEndOfBank {
-				break
-			}
-		}
-
-		battery1, err := strconv.ParseInt(string(batteryBank[i1]), 10, 64)
-		if err != nil {
-			return 0, fmt.Errorf("failed to parse battery '%c': %w", batteryBank[i1], err)
-		}
-
-		joltage = battery1 * int64(math.Pow(10, float64(batteryCount-1)))
-
-		if joltage < maxJoltage {
-			continue
-		}
-
-		if batteryCount > 1 {
-			subJoltage, err := getMaxJoltage(batteryBank[i1+1:], batteryCount-1, joltage, verboseOutput)
-			if err != nil {
-				return 0, err
-			}
-			joltage += subJoltage
-		}
-
-		if startingJoltage > 0 {
-			potentialJoltage := joltage * 10
-			if !isEndOfBank && startingJoltage > 0 && potentialJoltage > startingJoltage {
-				return -startingJoltage, nil
-			}
-		}
-
-		if joltage > maxJoltage {
-			maxJoltage = joltage
-		}
-	}
-
-	if verboseOutput {
-		tabs := ""
-		for i := 0; i < int(batteryCount); i++ {
-			tabs += "\t"
-		}
-		fmt.Printf("%smax joltage: %d\n", tabs, maxJoltage)
-	}
-
-	return maxJoltage, nil
-	/*
-		for i2 := i1 + 1; i2 < len(batteryBank); i2++ {
-
-			endOfBank := i2 >= len(batteryBank)-1
-
-			if verboseOutput && endOfBank {
-				fmt.Print("\tend of bank\n")
-			}
-
-			battery2, err := strconv.ParseInt(string(batteryBank[i2]), 10, 64)
-			if err != nil {
-				return 0, fmt.Errorf("failed to parse battery '%c': %w", batteryBank[i2], err)
-			}
-			if battery2 > battery1 && !endOfBank {
-				break
-			}
-			if battery2 > reservedBatteries[1] {
-				reservedBatteries[1] = battery2
-			}
-		}
-	}*/
-
-	maxJoltageText := fmt.Sprintf("%d%d", reservedBatteries[0], reservedBatteries[1])
-
-	maxJoltage, err := strconv.ParseInt(maxJoltageText, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse joltage '%s': %w", maxJoltageText, err)
-	}
-
-	return maxJoltage, nil
 }
