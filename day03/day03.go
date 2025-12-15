@@ -36,7 +36,8 @@ func Solve(advent *common.AdventSetup) (string, error) {
 
 		tasks.Add(1)
 		go func() {
-			maxJoltage, err := getMaxJoltage(bankText, numberOfBatteries, 0, advent.VerboseOutput)
+			//maxJoltage, err := getMaxJoltage(bankText, numberOfBatteries, 0, advent.VerboseOutput)
+			maxJoltage, err := getMaxJoltageReverse(bankText, numberOfBatteries, advent.VerboseOutput)
 			if err != nil {
 				fmt.Print(fmt.Errorf("error on bank %d, '%s': %w", bankNumber, bankText, err))
 			}
@@ -53,6 +54,57 @@ func Solve(advent *common.AdventSetup) (string, error) {
 	return solution, nil
 }
 
+func getMaxJoltageReverse(batteryBank string, batteryCount int64, verboseOutput bool) (int64, error) {
+
+	if verboseOutput {
+		fmt.Printf("bank: %s\n", batteryBank)
+	}
+
+	var startingIndex = len(batteryBank) - int(batteryCount)
+	var largestBattery int64 = 0
+	var largestBatteryIndex int = -1
+
+	for i := startingIndex; i >= 0; i-- {
+		battery, err := strconv.ParseInt(string(batteryBank[i]), 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("failed to parse battery '%c': %w", batteryBank[i], err)
+		}
+
+		if battery >= largestBattery {
+			largestBatteryIndex = i
+			largestBattery = battery
+		}
+	}
+
+	joltage := largestBattery * int64(math.Pow(10, float64(batteryCount-1)))
+
+	if verboseOutput {
+		tabs := ""
+		for i := 0; i < int(batteryCount); i++ {
+			tabs += " "
+		}
+		fmt.Printf("%sjoltage: %d\n", tabs, joltage)
+	}
+
+	if batteryCount > 1 {
+		subJoltage, err := getMaxJoltageReverse(batteryBank[largestBatteryIndex+1:], batteryCount-1, verboseOutput)
+		if err != nil {
+			return 0, err
+		}
+		joltage += subJoltage
+	}
+
+	if verboseOutput {
+		tabs := ""
+		for i := 0; i < int(batteryCount); i++ {
+			tabs += " "
+		}
+		fmt.Printf("%smax joltage: %d\n", tabs, joltage)
+	}
+
+	return joltage, nil
+
+}
 func getMaxJoltage(batteryBank string, batteryCount int64, startingJoltage int64, verboseOutput bool) (int64, error) {
 
 	var maxJoltage int64 = 0
