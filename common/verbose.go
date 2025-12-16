@@ -37,7 +37,7 @@ func (logger *Logger) PrintVerboseFD(template string, depth int, params ...any) 
 		indentation += logger.IndentText
 	}
 
-	template = "%s" + template
+	template = indentation + template
 
-	logger.PrintVerboseF(template, indentation, params)
+	fmt.Printf(template, params...)
 }
