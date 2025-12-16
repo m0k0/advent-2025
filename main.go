@@ -8,6 +8,7 @@ import (
 	"m0k0/advent-2025/day02"
 	"m0k0/advent-2025/day03"
 	"m0k0/advent-2025/day04"
+	"m0k0/advent-2025/day05"
 	"os"
 )
 
@@ -48,7 +49,9 @@ func solve(advent *common.AdventSetup) (string, error) {
 		return day03.Solve(advent)
 	case 4:
 		return day04.Solve(advent)
+	case 5:
+		return day05.Solve(advent)
 	default:
-		return "", errors.New("no solution availble for this day")
+		return "", errors.New("no solution available for this day")
 	}
 }
