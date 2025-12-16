@@ -116,17 +116,28 @@ func (grid *Grid[T]) SetValue(x int, y int, value T) {
 	entry := grid.getEntryAt(x, y)
 	entry.value = value
 }
+
 func (grid *Grid[T]) SetValues(y int, values []T) {
+	grid.SetValuesMask(y, values, func(r T) bool { return true })
+}
+
+// set values, but only if the maskFunc evaluates as true
+func (grid *Grid[T]) SetValuesMask(y int, values []T, maskFunc func(T) bool) {
 	row := grid.getRowAt(y)
 
 	var lastEntry *gridEntry[T]
 	entry := row.first
 	for i := range len(values) {
 
+		value := values[i]
+
 		if entry == nil {
 			entry = row.createEntryAfter(i, lastEntry)
 		}
-		entry.value = values[i]
+		if maskFunc(value) {
+			entry.value = value
+		}
+
 		lastEntry = entry
 		entry = entry.next
 	}
