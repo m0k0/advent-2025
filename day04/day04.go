@@ -36,68 +36,43 @@ func Solve(advent *common.AdventSetup) (string, error) {
 		rowIx++
 	}
 
-	gridArray := grid.Slice(0, 0, grid.Width, grid.Height)
+	/*
+		gridArray := grid.Slice(0, 0, grid.Width, grid.Height)
 
-	for y := range gridArray {
-		logger.PrintVerboseF("%s\n", string(gridArray[y]))
-	}
+		for y := range gridArray {
+			logger.PrintVerboseF("%s\n", string(gridArray[y]))
+		}
+	*/
 
-	return "", nil
-	rowQueue := common.Queue[string]{}
-	rowIndex := 0
 	totalAccessibleRolls := 0
-	for {
-
-		hasData := scanner.Scan()
-		if hasData {
-			rowQueue.Push(scanner.Text())
-		}
-
-		if rowQueue.Length < REQUIRED_ROWS {
-			if !hasData {
-				break
-			}
-			// not enough data to assess adjacency, read more
-			continue
-		}
+	for y := range grid.Height {
 
 		// create search grid
-		var searchGrid [SEARCH_GRID_SIZE]string
+		searchGrid := grid.Slice(0, y-1, grid.Width, SEARCH_GRID_SIZE)
 
-		i := 0
-		if rowIndex < SEARCH_RADIUS {
-			i = rowIndex + SEARCH_RADIUS
-		}
-		logger.PrintVerbose("Search grid: \n")
-		for item := range rowQueue.Items() {
-			searchGrid[i] = item
-			i++
-
-			if advent.VerboseOutput {
+		if advent.VerboseOutput {
+			logger.PrintVerbose("Search grid: \n")
+			for i, row := range searchGrid {
 				marker := "]"
-				if i == len(searchGrid)/2+1 {
+				if i == len(searchGrid)/2 {
 					marker = ">"
 				}
-				logger.PrintVerboseF("%s %s\n", marker, item)
+				logger.PrintVerboseF("%s %s\n", marker, string(row))
 			}
 		}
+
 		// assess grid
 		logger.PrintVerbose("Accessible rolls of paper: \n")
 		accessibleRolls := countAccessibleRollsOfPaper(searchGrid[:], MAX_ADJACENT_ROLLS, logger)
 		logger.PrintVerboseF("\nFound %d accessible rolls \n\n", accessibleRolls)
 		totalAccessibleRolls += accessibleRolls
 
-		if rowIndex >= SEARCH_RADIUS {
-			// storing more than we need
-			rowQueue.Pop()
-		}
-		rowIndex++
 	}
 	solution := fmt.Sprintf("Total accessible rolls of paper: %d\n", totalAccessibleRolls)
 	return solution, nil
 }
 
-func countAccessibleRollsOfPaper(searchGrid []string, maxRolls int, logger common.Logger) int {
+func countAccessibleRollsOfPaper(searchGrid [][]rune, maxRolls int, logger common.Logger) int {
 
 	searchRadius := len(searchGrid) / 2
 	rowIndex := searchRadius
@@ -120,7 +95,7 @@ func countAccessibleRollsOfPaper(searchGrid []string, maxRolls int, logger commo
 			if rowIndex+y < 0 || rowIndex+y >= len(rowToAnalyse) {
 				continue //out of bounds
 			}
-			if searchGrid[rowIndex+y] == "" {
+			if searchGrid[rowIndex+y] == nil {
 				continue // empty row, skip
 			}
 

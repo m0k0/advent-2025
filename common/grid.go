@@ -22,14 +22,22 @@ func (grid *Grid[T]) Slice(x int, y int, width int, height int) [][]T {
 	result := make([][]T, height)
 
 	for h := range height {
-		row := grid.getRowAt(y + h)
 		resultRow := make([]T, width)
 		result[h] = resultRow
+		if y+h < 0 {
+			// out of bounds
+			continue
+		}
+		row := grid.getRowAt(y + h)
 
 		for w := range width {
+			if x+w < 0 {
+				// out of bounds
+				continue
+			}
 			entry := row.getEntryAt(x + w)
 
-			resultRow[x+w] = entry.value
+			resultRow[w] = entry.value
 		}
 	}
 
