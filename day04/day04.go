@@ -22,11 +22,27 @@ func Solve(advent *common.AdventSetup) (string, error) {
 	}
 	defer inputFile.Close()
 
-	scanner := bufio.NewScanner(inputFile)
 	logger := common.Logger{
 		Verbose: advent.VerboseOutput,
 	}
 
+	scanner := bufio.NewScanner(inputFile)
+
+	grid := common.Grid[rune]{}
+	rowIx := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		grid.SetValues(rowIx, []rune(line))
+		rowIx++
+	}
+
+	gridArray := grid.Slice(0, 0, grid.Width, grid.Height)
+
+	for y := range gridArray {
+		logger.PrintVerboseF("%s\n", string(gridArray[y]))
+	}
+
+	return "", nil
 	rowQueue := common.Queue[string]{}
 	rowIndex := 0
 	totalAccessibleRolls := 0
