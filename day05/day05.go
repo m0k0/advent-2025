@@ -18,6 +18,24 @@ func (numberRange *NumberRange) IsInRange(number int64) bool {
 	inRange := number >= numberRange.start && number <= numberRange.end
 	return inRange
 }
+func (a *NumberRange) Merge(b *NumberRange) (*NumberRange, error) {
+	if a.IsInRange(b.start) ||
+		b.IsInRange(a.end) {
+		new := &NumberRange{
+			start: a.start,
+			end:   b.end,
+		}
+		return new, nil
+	} else if a.IsInRange(b.end) ||
+		b.IsInRange(a.start) {
+		new := &NumberRange{
+			start: b.start,
+			end:   a.end,
+		}
+		return new, nil
+	}
+	return nil, errors.New("ranges can't be merged")
+}
 
 func createRange(spec string) (*NumberRange, error) {
 
@@ -80,9 +98,71 @@ func Solve(advent *common.AdventSetup) (string, error) {
 
 	}
 
-	// evaluate ingredients
+	var freshCount int64
+	if advent.Variant == "part1" {
+		// evaluate ingredients
+		freshCount, err = countFreshIngredientsFromAvailableIds(scanner, lineNumber, freshRanges, logger)
+		if err != nil {
+			return "", err
+		}
 
-	freshCount := 0
+	} else {
+		// evaluate ingredients
+		optimiseRanges(freshRanges, logger)
+		freshCount = countFreshIngredientsFromRanges(freshRanges, logger)
+	}
+
+	solution := fmt.Sprintf("total number of fresh ingredients: %d", freshCount)
+	return solution, nil
+}
+
+func countFreshIngredientsFromRanges(freshRanges common.LinkedList[*NumberRange], logger common.Logger) int64 {
+
+	var totalFreshCount int64 = 0
+	for currentRange := range freshRanges.Values() {
+		freshCount := currentRange.end - currentRange.start + 1
+		logger.PrintVerboseF("range %d-%d: %d fresh ingredients\n", currentRange.start, currentRange.end, freshCount)
+		totalFreshCount += freshCount
+	}
+	return totalFreshCount
+}
+func optimiseRanges(freshRanges common.LinkedList[*NumberRange], logger common.Logger) {
+
+	//optimisedRanges := common.LinkedList[*NumberRange]{}
+
+	for {
+		mergeCount := 0
+		for entryA := range freshRanges.Entries() {
+			currentRange := entryA.Value
+			logger.PrintVerboseF("range %d-%d:\n", currentRange.start, currentRange.end)
+
+			for entryB := range freshRanges.Entries() {
+				optimisedRange := entryB.Value
+				if optimisedRange == nil || currentRange == optimisedRange {
+					continue
+				}
+
+				newRange, err := optimisedRange.Merge(currentRange)
+				if err == nil {
+					entryA.Remove()
+					entryB.Value = newRange
+					mergeCount++
+					logger.PrintVerboseFD("merged %d-%d with %d-%d: %d-%d\n", 1,
+						currentRange.start, currentRange.end,
+						optimisedRange.start, optimisedRange.end,
+						newRange.start, newRange.end)
+					break
+				}
+			}
+		}
+		if mergeCount == 0 {
+			break
+		}
+	}
+}
+
+func countFreshIngredientsFromAvailableIds(scanner *bufio.Scanner, lineNumber int, freshRanges common.LinkedList[*NumberRange], logger common.Logger) (int64, error) {
+	var freshCount int64 = 0
 	for scanner.Scan() {
 		lineNumber++
 
@@ -90,12 +170,12 @@ func Solve(advent *common.AdventSetup) (string, error) {
 
 		id, err := strconv.ParseInt(line, 10, 64)
 		if err != nil {
-			return "", fmt.Errorf("invalid id '%s' on line %d", line, lineNumber)
+			return freshCount, fmt.Errorf("invalid id '%s' on line %d", line, lineNumber)
 		}
 
 		logger.PrintVerboseF("\ningredient %d\n", id)
 		isFresh := false
-		for numberRange := range freshRanges.Iterate() {
+		for numberRange := range freshRanges.Values() {
 			if numberRange.IsInRange(id) {
 				logger.PrintVerboseFD("is in range %d-%d\n", 1, numberRange.start, numberRange.end)
 				isFresh = true
@@ -107,7 +187,5 @@ func Solve(advent *common.AdventSetup) (string, error) {
 			freshCount++
 		}
 	}
-
-	solution := fmt.Sprintf("total number of fresh ingredients: %d", freshCount)
-	return solution, nil
+	return freshCount, nil
 }
