@@ -14,20 +14,29 @@ type NumberRange struct {
 	end   int64
 }
 
-func (numberRange *NumberRange) IsInRange(number int64) bool {
+func (numberRange *NumberRange) HasInRange(number int64) bool {
 	inRange := number >= numberRange.start && number <= numberRange.end
 	return inRange
 }
 func (a *NumberRange) Merge(b *NumberRange) (*NumberRange, error) {
-	if a.IsInRange(b.start) ||
-		b.IsInRange(a.end) {
+
+	if a.HasInRange(b.start) &&
+		a.HasInRange(b.end) {
+		// a fully contains b
+		return a, nil
+	} else if b.HasInRange(a.start) &&
+		b.HasInRange(a.end) {
+		// b fully cotains a
+		return b, nil
+	} else if a.HasInRange(b.start) ||
+		b.HasInRange(a.end) {
 		new := &NumberRange{
 			start: a.start,
 			end:   b.end,
 		}
 		return new, nil
-	} else if a.IsInRange(b.end) ||
-		b.IsInRange(a.start) {
+	} else if a.HasInRange(b.end) ||
+		b.HasInRange(a.start) {
 		new := &NumberRange{
 			start: b.start,
 			end:   a.end,
@@ -130,7 +139,11 @@ func optimiseRanges(freshRanges common.LinkedList[*NumberRange], logger common.L
 
 	//optimisedRanges := common.LinkedList[*NumberRange]{}
 
+	iterationCount := 0
+
 	for {
+		iterationCount++
+		logger.PrintVerboseF("optimiseRanges iteration %d\n", iterationCount)
 		mergeCount := 0
 		for entryA := range freshRanges.Entries() {
 			currentRange := entryA.Value
@@ -176,7 +189,7 @@ func countFreshIngredientsFromAvailableIds(scanner *bufio.Scanner, lineNumber in
 		logger.PrintVerboseF("\ningredient %d\n", id)
 		isFresh := false
 		for numberRange := range freshRanges.Values() {
-			if numberRange.IsInRange(id) {
+			if numberRange.HasInRange(id) {
 				logger.PrintVerboseFD("is in range %d-%d\n", 1, numberRange.start, numberRange.end)
 				isFresh = true
 				break
