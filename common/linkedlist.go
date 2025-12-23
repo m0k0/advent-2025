@@ -34,12 +34,12 @@ func (entry *linkedListEntry[T]) Remove() {
 	if entry.prev != nil {
 		entry.prev.next = entry.next
 	} else {
-		entry.list.first = entry
+		entry.list.first = entry.next
 	}
 	if entry.next != nil {
 		entry.next.prev = entry.prev
 	} else {
-		entry.list.last = entry
+		entry.list.last = entry.prev
 	}
 }
 
@@ -67,4 +67,26 @@ func (list *LinkedList[T]) Values() iter.Seq[T] {
 			}
 		}
 	}
+}
+
+func (list *LinkedList[T]) Slice(start int, end int) []T {
+
+	size := end - start
+	result := make([]T, size)
+
+	index := -1
+	for value := range list.Values() {
+		index++
+
+		if index < start {
+			continue
+		}
+		if index > end {
+			break
+		}
+
+		result[index] = value
+	}
+
+	return result
 }
